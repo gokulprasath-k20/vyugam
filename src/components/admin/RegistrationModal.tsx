@@ -92,7 +92,7 @@ export default function RegistrationModal({ isOpen, onClose, registrationId, onU
         setIsLoading(false);
     };
 
-    const expectedPayment = registration.registration_type === "team" ? 200 * (1 + teamMembers.length) : 200;
+    const expectedPayment = registration?.registration_type === "team" ? 200 * (1 + teamMembers.length) : 200;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
