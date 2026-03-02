@@ -22,6 +22,7 @@ const QR_IMAGES: Record<string, string> = {
     MBA: "/qr/mba.jpeg",
     BME: "/qr/bme.jpeg",
     Mech: "/qr/mech.jpeg",
+    SH: "/qr/sh.jpeg",
 };
 
 // ─── Department data ─────────────────────────────────────────────────────────
