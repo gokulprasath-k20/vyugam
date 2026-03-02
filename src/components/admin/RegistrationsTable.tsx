@@ -125,7 +125,6 @@ export function RegistrationsTable({
                                 <th className="px-6 py-5">Contact</th>
                                 <th className="px-6 py-5">Department / Event</th>
                                 <th className="px-6 py-5">Type</th>
-                                <th className="px-6 py-5">Date</th>
                                 <th className="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -167,9 +166,6 @@ export function RegistrationsTable({
                                             {reg.registration_type}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-muted-foreground font-medium">
-                                        {formatDate(reg.created_at)}
-                                    </td>
                                     <td className="px-6 py-5 text-right">
                                         <button
                                             onClick={() => setSelectedRegId(reg.id)}
@@ -182,7 +178,7 @@ export function RegistrationsTable({
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-20 text-center">
+                                    <td colSpan={5} className="px-6 py-20 text-center">
                                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                                             <Search className="w-10 h-10 mb-4 opacity-20" />
                                             <p className="text-lg font-medium text-foreground/80">No registrations found</p>
