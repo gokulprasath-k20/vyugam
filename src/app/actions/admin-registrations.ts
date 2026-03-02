@@ -30,7 +30,7 @@ export async function getRegistrations({ page = 1, pageSize = 50, search = "", d
 
     let query = supabase
         .from("registrations")
-        .select("id, leader_name, leader_email, leader_mobile, college_name, department, event_type, registration_type, created_at", { count: "exact" });
+        .select("id, leader_name, leader_email, leader_mobile, college_name, department, event_type, registration_type", { count: "exact" });
 
     if (departmentToQuery) {
         query = query.eq('department', departmentToQuery);

@@ -3,6 +3,7 @@ import { DashboardCharts } from "@/components/admin/DashboardCharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserPlus, IndianRupee } from "lucide-react";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {

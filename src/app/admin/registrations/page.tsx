@@ -1,6 +1,7 @@
 import { getRegistrations } from "@/app/actions/admin-registrations";
 import { RegistrationsTable } from "@/components/admin/RegistrationsTable";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export default async function RegistrationsPage() {
