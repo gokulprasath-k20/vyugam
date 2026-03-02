@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { updateRegistration, deleteRegistration } from "@/app/actions/admin-registrations";
+import { useEffect, useState } from "react";
+import { updateRegistration, deleteRegistration, getTeamMembers } from "@/app/actions/admin-registrations";
 import { X, Check, Save, Trash2, Edit, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +23,25 @@ export default function RegistrationModal({ isOpen, onClose, registration, onUpd
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [editData, setEditData] = useState({
-        leader_name: registration.leader_name,
-        leader_email: registration.leader_email,
-        leader_mobile: registration.leader_mobile,
-        college_name: registration.college_name,
-        department: registration.department,
-        event_type: registration.event_type
+        leader_name: registration?.leader_name,
+        leader_email: registration?.leader_email,
+        leader_mobile: registration?.leader_mobile,
+        college_name: registration?.college_name,
+        department: registration?.department,
+        event_type: registration?.event_type
     });
+    const [teamMembers, setTeamMembers] = useState<any[]>([]);
+    const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && registration && registration.registration_type === "team") {
+            setIsLoadingTeam(true);
+            getTeamMembers(registration.id).then(({ data }) => {
+                setTeamMembers(data || []);
+                setIsLoadingTeam(false);
+            });
+        }
+    }, [isOpen, registration]);
 
     if (!isOpen || !registration) return null;
 
@@ -60,7 +72,7 @@ export default function RegistrationModal({ isOpen, onClose, registration, onUpd
         setIsLoading(false);
     };
 
-    const expectedPayment = registration.registration_type === "team" ? 200 * (1 + (registration.team_members?.length || 0)) : 200;
+    const expectedPayment = registration.registration_type === "team" ? 200 * (1 + teamMembers.length) : 200;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
@@ -203,13 +215,15 @@ export default function RegistrationModal({ isOpen, onClose, registration, onUpd
                                     <h3 className="text-lg font-bold text-foreground mb-5 flex items-center gap-2">
                                         <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span> Team Members
                                         <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-500 text-xs rounded-full border border-blue-500/20">
-                                            {registration.team_members?.length || 0}
+                                            {isLoadingTeam ? "..." : teamMembers.length}
                                         </span>
                                     </h3>
 
-                                    {registration.team_members && registration.team_members.length > 0 ? (
+                                    {isLoadingTeam ? (
+                                        <p className="text-sm text-muted-foreground italic bg-card/50 p-4 rounded-lg text-center border border-dashed border-border/50 animate-pulse">Loading team members...</p>
+                                    ) : teamMembers.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {registration.team_members.map((member: any) => (
+                                            {teamMembers.map((member: any) => (
                                                 <div key={member.id} className="bg-card/40 rounded-xl p-4 border border-border/50 shadow-sm relative overflow-hidden group">
                                                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-100 transition-opacity">
                                                         <span className="text-4xl font-black text-muted-foreground">{member.member_index}</span>
@@ -245,7 +259,7 @@ export default function RegistrationModal({ isOpen, onClose, registration, onUpd
                                 <div className="bg-card/50 rounded-xl p-5 mb-6 border border-border/50 flex align-center justify-between shrink-0">
                                     <div>
                                         <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Expected Payment</div>
-                                        <div className="text-sm text-foreground">₹200 &times; {registration.registration_type === "team" ? (1 + (registration.team_members?.length || 0)) : 1} participants</div>
+                                        <div className="text-sm text-foreground">₹200 &times; {registration.registration_type === "team" ? (1 + teamMembers.length) : 1} participants</div>
                                     </div>
                                     <div className="text-3xl font-black text-amber-500">₹{expectedPayment}</div>
                                 </div>

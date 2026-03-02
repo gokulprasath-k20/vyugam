@@ -26,15 +26,17 @@ interface ChartData {
 
 interface DashboardChartsProps {
     deptData: ChartData[];
+    revenueData?: ChartData[];
     eventData: ChartData[];
     userDept?: string;
     totalRevenue?: number;
 }
 
-export function DashboardCharts({ deptData, eventData, userDept = "ALL", totalRevenue = 0 }: DashboardChartsProps) {
+export function DashboardCharts({ deptData, revenueData: propRevenueData, eventData, userDept = "ALL", totalRevenue = 0 }: DashboardChartsProps) {
     const isSingleDept = userDept !== "ALL";
-    // Revenue breakdown per department at ₹200 per registration
-    const revenueData = deptData.map(d => ({ name: d.name, value: d.value * 200 }));
+    // Revenue breakdown per department at ₹200 per registration (fallback)
+    const fallbackRevenueData = deptData.map(d => ({ name: d.name, value: d.value * 200 }));
+    const revenueData = propRevenueData || fallbackRevenueData;
 
     return (
         <div className="space-y-8 mt-8">

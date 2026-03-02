@@ -80,7 +80,7 @@ export default async function AdminDashboard() {
                 </Card>
             </div>
 
-            <DashboardCharts deptData={stats.deptData} eventData={stats.eventData} userDept={stats.userDept} totalRevenue={stats.totalRevenue} />
+            <DashboardCharts deptData={stats.deptData} revenueData={stats.revenueData} eventData={stats.eventData} userDept={stats.userDept} totalRevenue={stats.totalRevenue} />
         </div>
     );
 }

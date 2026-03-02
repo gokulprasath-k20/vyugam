@@ -21,7 +21,7 @@ export async function getDashboardStats() {
     const department = payload.department as string;
 
     let query = supabase.from("registrations").select("id, department, event_type, registration_type");
-    let tmQuery = supabase.from("team_members").select("*, registrations!inner(department)", { count: 'exact', head: true });
+    let tmQuery = supabase.from("team_members").select("*, registrations!inner(department)");
 
     if (department !== "ALL") {
         query = query.eq('department', department);
@@ -35,7 +35,7 @@ export async function getDashboardStats() {
         throw new Error("Failed to fetch statistics");
     }
 
-    const { count: teamMembersCount, error: tmError } = await tmQuery;
+    const { data: teamMembers, error: tmError } = await tmQuery;
 
     if (tmError) {
         console.error("Error fetching team members count:", tmError);
@@ -43,19 +43,31 @@ export async function getDashboardStats() {
 
     const totalRegistrations = regs.length;
 
+    const teamMembersCount = teamMembers?.length || 0;
+
     // Total participants = Total leaders (one per registration) + Total Additional Team Members
-    const totalParticipants = totalRegistrations + (teamMembersCount || 0);
+    const totalParticipants = totalRegistrations + teamMembersCount;
     const totalRevenue = totalParticipants * 200;
 
     const deptCounts: Record<string, number> = {};
+    const participantCounts: Record<string, number> = {};
     const eventCounts: Record<string, number> = {};
 
     regs.forEach(reg => {
         deptCounts[reg.department] = (deptCounts[reg.department] || 0) + 1;
+        participantCounts[reg.department] = (participantCounts[reg.department] || 0) + 1;
         eventCounts[reg.event_type] = (eventCounts[reg.event_type] || 0) + 1;
     });
 
+    teamMembers?.forEach((tm: any) => {
+        const dept = tm.registrations?.department;
+        if (dept) {
+            participantCounts[dept] = (participantCounts[dept] || 0) + 1;
+        }
+    });
+
     const deptData = Object.entries(deptCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    const revenueData = Object.entries(participantCounts).map(([name, value]) => ({ name, value: value * 200 })).sort((a, b) => b.value - a.value);
     const eventData = Object.entries(eventCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
     return {
@@ -63,6 +75,7 @@ export async function getDashboardStats() {
         totalRevenue,
         totalParticipants,
         deptData,
+        revenueData,
         eventData,
         userDept: department
     };

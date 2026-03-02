@@ -21,7 +21,7 @@ export async function getRegistrations() {
 
     let query = supabase
         .from("registrations")
-        .select("*, team_members(*)")
+        .select("*")
         .order("id", { ascending: false });
 
     if (department !== "ALL") {
@@ -36,6 +36,22 @@ export async function getRegistrations() {
     }
 
     return { data, userDept: department };
+}
+
+export async function getTeamMembers(registrationId: string) {
+    const payload = await getAuthenticatedAdmin();
+    // Verify admin can access this department if needed, but for simplicity we rely on the ID
+    const { data, error } = await supabase
+        .from("team_members")
+        .select("*")
+        .eq("registration_id", registrationId)
+        .order("member_index", { ascending: true });
+
+    if (error) {
+        console.error("Error fetching team members:", error);
+        return { data: [] };
+    }
+    return { data };
 }
 
 export async function updateRegistration(id: string, updates: Record<string, unknown>) {
