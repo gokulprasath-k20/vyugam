@@ -101,21 +101,25 @@ export default function RegistrationModal({ isOpen, onClose, registrationId, onU
                 <div className="shrink-0 bg-background/50 backdrop-blur-xl p-6 border-b border-border/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                     <div>
                         <h2 className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-300">Registration Details</h2>
-                        <p className="text-sm font-medium text-muted-foreground mt-1 tracking-wide uppercase">ID: {registration.id}</p>
+                        <p className="text-sm font-medium text-muted-foreground mt-1 tracking-wide uppercase">ID: {registrationId}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        {!isEditing ? (
-                            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-primary/30 hover:bg-primary/10">
-                                <Edit className="w-4 h-4 mr-2 text-primary" /> Edit
-                            </Button>
-                        ) : (
-                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
-                                Cancel
-                            </Button>
+                        {registration && (
+                            <>
+                                {!isEditing ? (
+                                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-primary/30 hover:bg-primary/10">
+                                        <Edit className="w-4 h-4 mr-2 text-primary" /> Edit
+                                    </Button>
+                                ) : (
+                                    <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+                                        Cancel
+                                    </Button>
+                                )}
+                                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isLoading} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20">
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                </Button>
+                            </>
                         )}
-                        <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isLoading} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20">
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </Button>
                         <button onClick={onClose} className="p-2 ml-1 text-muted-foreground hover:bg-card hover:text-foreground rounded-full transition-colors border border-transparent hover:border-border/50">
                             <X className="w-5 h-5" />
                         </button>
