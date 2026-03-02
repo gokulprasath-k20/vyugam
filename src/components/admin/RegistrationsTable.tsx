@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, Search, Filter } from "lucide-react";
+import { Eye, Search, Filter, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import RegistrationModal from "@/components/admin/RegistrationModal";
+import { getRegistrations } from "@/app/actions/admin-registrations";
+import { useDebounce } from "@/hooks/useDebounce"; // Will create this simple hook
 
 // Helper to format date safely
 const formatDate = (dateStr: string) => {
@@ -16,28 +18,71 @@ const formatDate = (dateStr: string) => {
     }
 };
 
-export function RegistrationsTable({ initialData, userDept = "ALL" }: { initialData: any[], userDept?: string }) {
+export function RegistrationsTable({
+    initialData,
+    initialCount,
+    initialDepts,
+    userDept = "ALL"
+}: {
+    initialData: any[],
+    initialCount: number,
+    initialDepts: string[],
+    userDept?: string
+}) {
     const [data, setData] = useState(initialData);
+    const [totalCount, setTotalCount] = useState(initialCount);
+    const [uniqueDepts, setUniqueDepts] = useState(initialDepts);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Pagination & Filters
+    const [page, setPage] = useState(1);
+    const pageSize = 50;
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
     const [deptFilter, setDeptFilter] = useState("ALL");
     const [selectedReg, setSelectedReg] = useState<any | null>(null);
 
     const isSingleDept = userDept !== "ALL";
 
-    // Filter logic
-    const filteredData = data.filter(reg => {
-        const matchesSearch =
-            reg.leader_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            reg.leader_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            reg.college_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            reg.leader_mobile.includes(searchTerm);
+    // Fetch new data when page, search, or dept changes
+    useEffect(() => {
+        let isMounted = true;
 
-        const matchesDept = isSingleDept ? true : (deptFilter === "ALL" || reg.department === deptFilter);
+        async function fetchData() {
+            setIsLoading(true);
+            try {
+                const res = await getRegistrations({
+                    page,
+                    pageSize,
+                    search: debouncedSearch,
+                    deptFilter
+                });
 
-        return matchesSearch && matchesDept;
-    });
+                if (isMounted) {
+                    setData(res.data);
+                    setTotalCount(res.count);
+                    if (res.uniqueDepts && res.uniqueDepts.length > 0 && uniqueDepts.length === 0) {
+                        setUniqueDepts(res.uniqueDepts);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch paginated data", error);
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        }
 
-    const uniqueDepts = Array.from(new Set(data.map(d => d.department)));
+        fetchData();
+
+        return () => { isMounted = false; };
+    }, [page, pageSize, debouncedSearch, deptFilter]);
+
+    // Reset page to 1 when search or dept changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, deptFilter]);
+
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <div className="space-y-4">
@@ -84,8 +129,15 @@ export function RegistrationsTable({ initialData, userDept = "ALL" }: { initialD
                                 <th className="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/20">
-                            {filteredData.length > 0 ? filteredData.map((reg) => (
+                        <tbody className="divide-y divide-border/20 relative">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={6} className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center min-h-[400px]">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                    </td>
+                                </tr>
+                            )}
+                            {data.length > 0 ? data.map((reg) => (
                                 <tr key={reg.id} className="hover:bg-primary/5 transition-colors duration-200 group">
                                     <td className="px-6 py-5">
                                         <div className="font-bold text-foreground group-hover:text-primary transition-colors">{reg.leader_name}</div>
@@ -144,8 +196,30 @@ export function RegistrationsTable({ initialData, userDept = "ALL" }: { initialD
                 </div>
             </div>
 
-            <div className="text-sm text-muted-foreground px-1">
-                Showing {filteredData.length} of {data.length} total registrations
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
+                <div className="text-sm text-muted-foreground">
+                    Showing {data.length > 0 ? ((page - 1) * pageSize) + 1 : 0} to {Math.min(page * pageSize, totalCount)} of {totalCount} total registrations
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1 || isLoading}
+                        className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border/40 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <div className="text-sm font-medium px-2">
+                        Page {page} of {totalPages || 1}
+                    </div>
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages || isLoading}
+                        className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border/40 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             {selectedReg && (

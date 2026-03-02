@@ -15,27 +15,59 @@ async function getAuthenticatedAdmin() {
     return payload;
 }
 
-export async function getRegistrations() {
+interface GetRegistrationsParams {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    deptFilter?: string;
+}
+
+export async function getRegistrations({ page = 1, pageSize = 50, search = "", deptFilter = "ALL" }: GetRegistrationsParams = {}) {
     const payload = await getAuthenticatedAdmin();
-    const department = payload.department as string;
+    const adminDept = payload.department as string;
+
+    const departmentToQuery = adminDept !== "ALL" ? adminDept : (deptFilter !== "ALL" ? deptFilter : null);
 
     let query = supabase
         .from("registrations")
-        .select("*")
-        .order("id", { ascending: false });
+        .select("*", { count: "exact" })
 
-    if (department !== "ALL") {
-        query = query.eq('department', department);
+    if (departmentToQuery) {
+        query = query.eq('department', departmentToQuery);
     }
 
-    const { data, error } = await query;
+    if (search) {
+        // Search across multiple columns using OR. Requires text indexing for performance if large.
+        query = query.or(`leader_name.ilike.%${search}%,leader_email.ilike.%${search}%,college_name.ilike.%${search}%,leader_mobile.ilike.%${search}%`);
+    }
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    query = query.order("id", { ascending: false }).range(from, to);
+
+    const { data, count, error } = await query;
 
     if (error) {
         console.error("Error fetching registrations:", error);
         throw new Error("Failed to fetch registrations: " + error.message);
     }
 
-    return { data, userDept: department };
+    // Also fetch unique departments for the filter dropdown (small separate query)
+    let depts: string[] = [];
+    if (adminDept === "ALL") {
+        const { data: deptData } = await supabase.from("registrations").select("department");
+        if (deptData) {
+            depts = Array.from(new Set(deptData.map(d => d.department)));
+        }
+    }
+
+    return {
+        data: data || [],
+        count: count || 0,
+        uniqueDepts: depts,
+        userDept: adminDept
+    };
 }
 
 export async function getTeamMembers(registrationId: string) {
