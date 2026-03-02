@@ -30,7 +30,7 @@ export async function getRegistrations({ page = 1, pageSize = 50, search = "", d
 
     let query = supabase
         .from("registrations")
-        .select("*", { count: "exact" })
+        .select("id, leader_name, leader_email, leader_mobile, college_name, department, event_type, registration_type, created_at", { count: "exact" });
 
     if (departmentToQuery) {
         query = query.eq('department', departmentToQuery);
@@ -82,6 +82,27 @@ export async function getTeamMembers(registrationId: string) {
     if (error) {
         console.error("Error fetching team members:", error);
         return { data: [] };
+    }
+    return { data };
+}
+
+export async function getRegistrationDetails(id: string) {
+    const payload = await getAuthenticatedAdmin();
+    const department = payload.department as string;
+
+    let query = supabase
+        .from("registrations")
+        .select("*")
+        .eq("id", id);
+
+    if (department !== "ALL") {
+        query = query.eq("department", department);
+    }
+
+    const { data, error } = await query.single();
+    if (error) {
+        console.error("Error fetching registration details:", error);
+        return { data: null };
     }
     return { data };
 }

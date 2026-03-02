@@ -40,7 +40,7 @@ export function RegistrationsTable({
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
     const [deptFilter, setDeptFilter] = useState("ALL");
-    const [selectedReg, setSelectedReg] = useState<any | null>(null);
+    const [selectedRegId, setSelectedRegId] = useState<string | null>(null);
 
     const isSingleDept = userDept !== "ALL";
 
@@ -172,7 +172,7 @@ export function RegistrationsTable({
                                     </td>
                                     <td className="px-6 py-5 text-right">
                                         <button
-                                            onClick={() => setSelectedReg(reg)}
+                                            onClick={() => setSelectedRegId(reg.id)}
                                             className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-background hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300 border border-border/40 hover:border-transparent hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5"
                                             title="View Details"
                                         >
@@ -222,18 +222,19 @@ export function RegistrationsTable({
                 </div>
             </div>
 
-            {selectedReg && (
+            {selectedRegId && (
                 <RegistrationModal
-                    isOpen={!!selectedReg}
-                    onClose={() => setSelectedReg(null)}
-                    registration={selectedReg}
+                    isOpen={!!selectedRegId}
+                    onClose={() => setSelectedRegId(null)}
+                    registrationId={selectedRegId}
                     onUpdate={(updatedData: any) => {
-                        setData(data.map(d => d.id === updatedData.id ? updatedData : d));
-                        setSelectedReg(updatedData);
+                        setData(data.map(d => d.id === updatedData.id ? { ...d, ...updatedData } : d));
+                        // Re-fetch handled natively by Modal now
                     }}
                     onDelete={(id: string) => {
                         setData(data.filter(d => d.id !== id));
-                        setSelectedReg(null);
+                        setSelectedRegId(null);
+                        setTotalCount(c => Math.max(0, c - 1));
                     }}
                 />
             )}
