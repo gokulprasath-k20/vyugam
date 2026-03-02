@@ -91,6 +91,7 @@ const DEPT_DATA: Record<string, {
             { value: "PaperPresentation", label: "Paper Presentation and Project Expo" },
             { value: "Technical", label: "Technical Event (Appathon)" },
             { value: "NonTechnical", label: "Non-Technical Event (Ad-Zap)" },
+            { value: "NonTechnical", label: "Non-Technical Event (AI-Memes)" },
         ],
         contact: "Mr. C.Surendarvijay | 9092566376 | it_vyugam26@avsenggcollege.ac.in",
         payment_contact: "Mr. C.Surendarvijay | 9092566376",
