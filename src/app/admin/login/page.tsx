@@ -21,6 +21,7 @@ const DEPARTMENTS = [
     { value: "MBA", label: "Management Studies" },
     { value: "BME", label: "Biomedical Engineering" },
     { value: "Mech", label: "Mechanical Engineering" },
+    { value: "SH", label: "Science & Humanities (1st Year)" },
 ];
 
 export default function AdminLogin() {
